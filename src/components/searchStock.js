@@ -3,7 +3,7 @@
 import React,{useState} from 'react';
 
 
-export default function searchStock({getSearchResult}) {
+export default function SearchStock({getSearchResult}) {
     const [query, setQuery] = useState("");
 
     const handleSubmit =  async(e) => {

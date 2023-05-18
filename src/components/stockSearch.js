@@ -5,7 +5,7 @@ import LineChart from "./lineChart"
 import { useDebouncedCallback as Db } from 'use-debounce';
 
 
-export default  function stockSearch() {
+export default function StockSearch() {
     const [value, setValue] = useState("")
 
 
