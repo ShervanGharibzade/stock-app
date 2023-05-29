@@ -1,12 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 :root {
   background: linear-gradient(305deg, rgba(0,48,87,1) 0%, rgba(0,0,0,1) 50%, rgba(0,48,57,1) 100%);
   background-repeat: no-repeat;
   background-size: cover;
   min-height: 100vh;
+  overflow: unset;
 }
 
 .loader {
