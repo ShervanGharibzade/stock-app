@@ -1,41 +1,56 @@
 "use client";
 
-import React,{useState} from 'react';
+import Image from "next/image";
+import { keyApi, baseUrl } from "@/config";
+import axios from "axios";
 
+export default function SearchStock({
+  setInfo,
+  info,
+  loading,
+  setData,
+  setLoading,
+}) {
+  const loadingButton = "bg-blue-400/60 rounded-full p-3 animate-pulse";
+  const button = "bg-zinc-700 rounded-full text-white p-3";
 
-export default function SearchStock({getSearchResult}) {
-    const [query, setQuery] = useState("");
-
-    const handleSubmit =  async(e) => {
-        e.preventDefault();
-
-        const KEY_API = 'H5BSP36WTSGCDNPE';
-        const BASE_URL = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${query}&apikey=${KEY_API}`;
-
-        const res = await fetch(BASE_URL);
-        const stock = await res.json();
-        const name = query
-        // for pass data to index page without state manager 
-        getSearchResult(stock, name)
+  const handleSubmit = async (e, data) => {
+    e.preventDefault();
+    setLoading(true);
+    const apiUrl = `${baseUrl}/${data.symbol}?timespan=${data.timespan}&adjusted=true&window=50&series_type=open&order=desc&apiKey=${keyApi}`;
+    try {
+      const res = await axios.get(apiUrl);
+      setData(res.data);
+      console.log("ok", res.data);
+    } catch (error) {
+      console.log(error);
     }
+    setLoading(false);
+  };
 
   return (
-    <form 
-    onSubmit={handleSubmit}
-    className='w-fit flex justify-center items-center gap-5 mx-auto'
-    >
-        <input
-        type='text'
-        className='rounded-2xl mx-auto p-2 w-42 h-10 outline-none bg-zinc-700 text-white text-center placeholder:text-center'
-        placeholder='Search Symbol ...'
-        onChange={(e) => { setQuery(e.target.value.toUpperCase())}}
-        />
-        <button 
-        className='rounded-full mx-auto bg-blue-700 text-zinc-100 my-5 ring-8 ring-white text-xs w-12 hover:ring-green-400 hover:bg-green-600 h-12 font-bold'
-        type='submit'
-        >
-            Go
-        </button>
+    <form
+      onSubmit={(e) => handleSubmit(e, info)}
+      className="w-fit flex justify-center items-center gap-5 mx-auto">
+      <input
+        type="text"
+        className="rounded-2xl mx-auto p-2 w-42 h-10 outline-none bg-zinc-700 text-white text-center placeholder:text-center"
+        placeholder="Symbol"
+        onChange={(e) => {
+          const uppercasedSymbol = e.target.value.toUpperCase();
+          setInfo({ ...info, symbol: uppercasedSymbol });
+        }}
+      />
+      <button className={loading ? loadingButton : button} type="submit">
+        {!loading && (
+          <Image
+            src="/images/icons8-submit-progress-50.png"
+            alt="submit progress"
+            width={30}
+            height={30}
+          />
+        )}
+      </button>
     </form>
-  )
+  );
 }
