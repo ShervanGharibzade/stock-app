@@ -1,20 +1,14 @@
 export default function welcome() {
   return (
-    <div className="text-4xl text-center">
-          <h1 className="text-zinc-300">
-            Hello and Welcome to
-          </h1>
-          <div className="relative animate-pulse w-48 mx-auto">
-            <h2 className="font-bold relative text-zinc-800 top-[13rem]">
-              Stock App
-            </h2>
-            <h2 className="font-bold relative text-zinc-600 top-[10rem]">
-              Stock App
-            </h2>
-            <h2 className="font-bold relative text-zinc-50 top-28">
-              Stock App
-            </h2>
-          </div>
-        </div>
-  )
+    <div className="text-2xl md:text-3xl lg:text-5xl text-zinc-400  text-center">
+      <h1 className="font-semibold">
+        Welcome to <span className="text-white">Stock</span> App
+      </h1>
+      <div className="mainAnimation">
+        <div className="circleAnimation"></div>
+        <div className="circleAnimation2"></div>
+        <div className="circleAnimation3"></div>
+      </div>
+    </div>
+  );
 }
