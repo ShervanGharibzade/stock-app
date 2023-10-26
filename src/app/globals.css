@@ -1,13 +1,120 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 :root {
-  background: linear-gradient(305deg, rgba(0,48,87,1) 0%, rgba(0,0,0,1) 50%, rgba(0,48,57,1) 100%);
+  background: rgb(12, 12, 12);
   background-repeat: no-repeat;
   background-size: cover;
   min-height: 100vh;
-  overflow: unset;
+  overflow-x: hidden;
+}
+
+.mainAnimation {
+  position: fixed;
+  animation: rotating 8s infinite ease-in-out;
+}
+
+@keyframes rotating {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.circleAnimation {
+  position: relative;
+  top: 0;
+  left: 0;
+  opacity: 0.5;
+  border-radius: 100%;
+  filter: blur(50px);
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(
+    305deg,
+    rgb(24, 255, 147) 20%,
+    rgb(178, 34, 255) 50%,
+    rgb(29, 149, 255) 100%
+  );
+  animation: bgloop 10s infinite ease-in-out;
+}
+
+.circleAnimation2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0.5;
+  border-radius: 100%;
+  filter: blur(50px);
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(
+    305deg,
+    rgb(24, 255, 147) 20%,
+    rgb(178, 34, 255) 50%,
+    rgb(29, 149, 255) 100%
+  );
+  animation: bgloop2 10s infinite ease-in-out;
+}
+
+.circleAnimation3 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0.5;
+  border-radius: 100%;
+  filter: blur(50px);
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(
+    305deg,
+    rgb(24, 255, 147) 20%,
+    rgb(178, 34, 255) 50%,
+    rgb(29, 149, 255) 100%
+  );
+  animation: bgloop3 10s infinite ease-in-out;
+}
+
+@keyframes bgloop {
+  0% {
+    transform: translate3d(800px, 500px, 300px);
+  }
+  50% {
+    transform: translate3d(0px, 0px, 0px);
+  }
+  100% {
+    transform: translate3d(800px, 500px, 300px);
+  }
+}
+
+@keyframes bgloop2 {
+  0% {
+    transform: translate3d(-900px, -300px, -300px);
+  }
+  50% {
+    transform: translate3d(0px, 0px, 0px);
+  }
+  100% {
+    transform: translate3d(-900px, -300px, -300px);
+  }
+}
+
+@keyframes bgloop3 {
+  0% {
+    transform: translate3d(400px, 600px, 300px);
+  }
+  50% {
+    transform: translate3d(-800px, -450px, 0px);
+  }
+  100% {
+    transform: translate3d(400px, 600px, 300px);
+  }
 }
 
 .loader {
