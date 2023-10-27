@@ -10,8 +10,8 @@ export default function Home() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState({
-    symbol: "AAPL",
-    timespan: "day",
+    symbol: "",
+    timespan: "",
   });
 
   return (
