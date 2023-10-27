@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Welcome from "@/components/welcome";
 import SearchStock from "@/components/searchStock";
 import LineChart from "@/components/lineChart";
-import { baseUrl, keyApi } from "@/config";
 
 export default function Home() {
   const [data, setData] = useState(null);
@@ -13,6 +12,7 @@ export default function Home() {
     symbol: "",
     timespan: "",
   });
+  const [nameStock, setNameStock] = useState("");
 
   return (
     <main className="py-16 lg:flex h-[100vh] gap-10 justify-center items-center w-fit mx-auto">
@@ -29,6 +29,7 @@ export default function Home() {
           info={info}
           setInfo={setInfo}
           data={data}
+          setNameStock={setNameStock}
           setData={setData}
         />
       </div>
