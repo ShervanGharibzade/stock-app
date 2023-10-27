@@ -11,8 +11,8 @@ export default function SearchStock({
   setData,
   setLoading,
 }) {
-  const loadingButton = "bg-blue-400/60 rounded-full p-3 animate-pulse";
-  const button = "bg-zinc-700 rounded-full text-white p-3";
+  const loadingButton = "bg-blue-400/60 rounded-full p-5 animate-pulse";
+  const button = "bg-zinc-700 z-50 rounded-full text-white p-3";
 
   const handleSubmit = async (e, data) => {
     e.preventDefault();
@@ -34,7 +34,7 @@ export default function SearchStock({
       className="w-fit flex justify-center items-center gap-5 mx-auto">
       <input
         type="text"
-        className="rounded-2xl mx-auto p-2 w-42 h-10 outline-none bg-zinc-700 text-white text-center placeholder:text-center"
+        className="rounded-2xl mx-auto p-2 w-42 h-10 outline-none bg-zinc-700 text-white text-center placeholder:text-center z-50"
         placeholder="Symbol"
         onChange={(e) => {
           const uppercasedSymbol = e.target.value.toUpperCase();
