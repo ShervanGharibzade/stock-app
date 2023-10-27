@@ -40,22 +40,24 @@ export default function SearchStock({ setInfo, loading, setData, setLoading }) {
           }
         }}
         className="w-fit flex justify-center items-center gap-5 mx-auto">
-        <input
-          type="text"
-          className="rounded-3xl mx-auto p-2 w-42 h-16 outline-none bg-zinc-700 text-white text-center placeholder:text-center z-50"
-          onChange={(e) => {
-            const uppercase_Symbol = e.target.value.toUpperCase();
-            setSymbol(uppercase_Symbol);
-          }}
-          placeholder={symbol}
-        />
-        <select
-          className="bg-zinc-700 text-white p-3 rounded-lg"
-          onChange={(e) => setTimespan(e.target.value)}>
-          <option value="minute">miu</option>
-          <option value="hour">hour</option>
-          <option value="day">day</option>
-        </select>
+        <div className="flex">
+          <input
+            type="text"
+            className="rounded-s-3xl mx-auto p-2 w-32 h-16 outline-none bg-zinc-700 text-white text-center placeholder:text-center z-50"
+            onChange={(e) => {
+              const uppercase_Symbol = e.target.value.toUpperCase();
+              setSymbol(uppercase_Symbol);
+            }}
+            placeholder="symbol"
+          />
+          <select
+            className="bg-zinc-700 w-42 h-16 text-white p-3 rounded-e-3xl z-50 outline-none"
+            onChange={(e) => setTimespan(e.target.value)}>
+            <option value="minute">miu</option>
+            <option value="hour">hour</option>
+            <option value="day">day</option>
+          </select>
+        </div>
         <button className={loading ? loadingButton : button} type="submit">
           {!loading && "Sub"}
         </button>
