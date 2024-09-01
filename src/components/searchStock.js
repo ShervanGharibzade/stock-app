@@ -12,10 +12,11 @@ export default function SearchStock({ setInfo, loading, setData, setLoading }) {
   const button =
     "bg-zinc-700 z-50 rounded-full text-white w-16 h-16 text-zinc-300";
 
+
   const handleSubmit = async (e, symbol, timespan) => {
     e.preventDefault();
     setLoading(true);
-    const apiUrl = `${baseUrl}/${symbol}?timespan=${timespan}&adjusted=true&window=50&series_type=close&order=desc&limit=10&apiKey=${keyApis}`
+    const apiUrl = `${baseUrl}/${symbol}?timespan=${timespan}&adjusted=true&window=50&series_type=close&order=desc&limit=10&apiKey=${keyApi}`
     try {
       const res = await axios.get(apiUrl);
       setData(res.data);
