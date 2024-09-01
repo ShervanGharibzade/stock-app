@@ -15,7 +15,7 @@ export default function SearchStock({ setInfo, loading, setData, setLoading }) {
   const handleSubmit = async (e, symbol, timespan) => {
     e.preventDefault();
     setLoading(true);
-    const apiUrl = `${baseUrl}/${symbol}?timespan=${timespan}&adjusted=true&window=50&series_type=open&order=desc&apiKey=${keyApi}`;
+    const apiUrl = `${baseUrl}/${symbol}?timespan=${timespan}&adjusted=true&window=50&series_type=close&order=desc&limit=10&apiKey=${keyApis}`
     try {
       const res = await axios.get(apiUrl);
       setData(res.data);

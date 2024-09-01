@@ -26,13 +26,13 @@ ChartJS.register(
 );
 
 export default function lineChart({ data, loading, name }) {
-  const result = data?.results?.values || [];
+  const result = data?.results || [];
 
   let price = [];
   let timeSeries = [];
 
-  result.length > 0 &&
-    result?.map((item) => {
+  result?.values.length > 0 &&
+    result?.values?.map((item) => {
       price.push(item.value);
       timeSeries.push(new Date(item.timestamp).getDay());
     });

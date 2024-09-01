@@ -14,6 +14,9 @@ export default function Home() {
   });
   const [nameStock, setNameStock] = useState("");
 
+  console.log(data);
+  
+
   return (
     <main className="py-16 lg:flex h-[100vh] gap-10 justify-center items-center w-fit mx-auto">
       <div className="h-full grid gap-5 lg:gap-0 justify-center items-center w-1/2 lg:w-full">
@@ -33,11 +36,11 @@ export default function Home() {
           setData={setData}
         />
       </div>
-      {data && (
+       {data && (
         <div className="hidden lg:block w-1/2 lg:w-full">
           <LineChart name={info.symbol} loading={loading} data={data} />
         </div>
-      )}
+      )} 
     </main>
   );
 }
