@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build"
+  publish = "out"
+
+[build.environment]
+  # The site is a static export (output: "export" in next.config.js),
+  # so the Next.js runtime plugin is not needed.
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
