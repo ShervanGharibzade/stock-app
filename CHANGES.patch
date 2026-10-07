@@ -1,0 +1,1530 @@
+diff --git a/.env b/.env
+deleted file mode 100644
+index c576d2e..0000000
+--- a/.env
++++ /dev/null
+@@ -1,2 +0,0 @@
+-NEXT_PUBLIC_APP_API_KEY=qAKYr2i1esGlzuoYxGfw7G0rvriCRpAR
+-NEXT_PUBLIC_APP_BASE_URL=https://api.polygon.io/v1/indicators/sma
+diff --git a/.env.example b/.env.example
+new file mode 100644
+index 0000000..6a01b54
+--- /dev/null
++++ b/.env.example
+@@ -0,0 +1,5 @@
++# Copy this file to `.env.local` and fill in your own Polygon.io API key.
++# NOTE: NEXT_PUBLIC_* variables are bundled into the browser build, so use a
++# free/restricted key and never reuse a key that protects anything valuable.
++NEXT_PUBLIC_APP_API_KEY=your_polygon_api_key
++NEXT_PUBLIC_APP_BASE_URL=https://api.polygon.io/v1/indicators/sma
+diff --git a/.github/workflows/nextjs.yml b/.github/workflows/nextjs.yml
+index 17c5fcc..65defb1 100644
+--- a/.github/workflows/nextjs.yml
++++ b/.github/workflows/nextjs.yml
+@@ -1,88 +1,57 @@
+-# Sample workflow for building and deploying a Next.js site to GitHub Pages
+-#
+-# To get started with Next.js see: https://nextjs.org/docs/getting-started
+-#
++# Builds the Next.js static export and deploys it to GitHub Pages.
++# Add your Polygon.io key as a repository secret named POLYGON_API_KEY
++# (Settings → Secrets and variables → Actions).
+ name: Deploy Next.js site to Pages
+ 
+ on:
+-  # Runs on pushes targeting the default branch
+   push:
+     branches: ["main"]
+-
+-  # Allows you to run this workflow manually from the Actions tab
+   workflow_dispatch:
+ 
+-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+ permissions:
+   contents: read
+   pages: write
+   id-token: write
+ 
+-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+ concurrency:
+   group: "pages"
+   cancel-in-progress: false
+ 
+ jobs:
+-  # Build job
+   build:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout
+-        uses: actions/checkout@v3
+-      - name: Detect package manager
+-        id: detect-package-manager
+-        run: |
+-          if [ -f "${{ github.workspace }}/yarn.lock" ]; then
+-            echo "manager=yarn" >> $GITHUB_OUTPUT
+-            echo "command=install" >> $GITHUB_OUTPUT
+-            echo "runner=yarn" >> $GITHUB_OUTPUT
+-            exit 0
+-          elif [ -f "${{ github.workspace }}/package.json" ]; then
+-            echo "manager=npm" >> $GITHUB_OUTPUT
+-            echo "command=ci" >> $GITHUB_OUTPUT
+-            echo "runner=npx --no-install" >> $GITHUB_OUTPUT
+-            exit 0
+-          else
+-            echo "Unable to determine package manager"
+-            exit 1
+-          fi
++        uses: actions/checkout@v4
+       - name: Setup Node
+-        uses: actions/setup-node@v3
++        uses: actions/setup-node@v4
+         with:
+-          node-version: "16"
+-          cache: ${{ steps.detect-package-manager.outputs.manager }}
++          node-version: 20
++          cache: npm
+       - name: Setup Pages
+-        uses: actions/configure-pages@v3
++        uses: actions/configure-pages@v4
+         with:
+-          # Automatically inject basePath in your Next.js configuration file and disable
+-          # server side image optimization (https://nextjs.org/docs/api-reference/next/image#unoptimized).
+-          #
+-          # You may remove this line if you want to manage the configuration yourself.
+           static_site_generator: next
+-      - name: Restore cache
+-        uses: actions/cache@v3
++      - name: Restore Next.js cache
++        uses: actions/cache@v4
+         with:
+-          path: |
+-            .next/cache
+-          # Generate a new cache whenever packages or source files change.
+-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+-          # If source files changed but packages didn't, rebuild from a prior cache.
++          path: .next/cache
++          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**/*.js', 'src/**/*.css') }}
+           restore-keys: |
+-            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
++            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
+       - name: Install dependencies
+-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+-      - name: Build with Next.js
+-        run: ${{ steps.detect-package-manager.outputs.runner }} next build
+-      - name: Static HTML export with Next.js
+-        run: ${{ steps.detect-package-manager.outputs.runner }} next export
++        run: npm ci
++      - name: Lint
++        run: npm run lint
++      - name: Build (static export to ./out)
++        run: npm run build
++        env:
++          NEXT_PUBLIC_APP_API_KEY: ${{ secrets.POLYGON_API_KEY }}
+       - name: Upload artifact
+-        uses: actions/upload-pages-artifact@v1
++        uses: actions/upload-pages-artifact@v3
+         with:
+           path: ./out
+ 
+-  # Deployment job
+   deploy:
+     environment:
+       name: github-pages
+@@ -92,4 +61,4 @@ jobs:
+     steps:
+       - name: Deploy to GitHub Pages
+         id: deployment
+-        uses: actions/deploy-pages@v2
++        uses: actions/deploy-pages@v4
+diff --git a/.gitignore b/.gitignore
+index 8f322f0..21f6993 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -33,3 +33,8 @@ yarn-error.log*
+ # typescript
+ *.tsbuildinfo
+ next-env.d.ts
++
++# local env files (never commit keys)
++.env
++.env.*
++!.env.example
+diff --git a/README.md b/README.md
+index b77b9a7..7024028 100644
+--- a/README.md
++++ b/README.md
+@@ -1,21 +1,40 @@
+-This is a project for showing stock data on chart and built with Next.js/13, Tailwindcss .
++# Stock Trends
+ 
+-## Project setup
++Search a stock symbol and chart its simple moving average (SMA) using the
++[Polygon.io](https://polygon.io) indicators API. Built with Next.js 13 (App Router), Tailwind CSS and Chart.js.
++
++## Setup
+ 
+ ```bash
+ npm install
+-#or
+-npm i
++cp .env.example .env.local   # then put your own Polygon.io key in it
++npm run dev                  # http://localhost:3000
+ ```
+ 
+-## Getting Started
++Other scripts: `npm run lint`, `npm run build` (static export to `./out`).
+ 
+-First, run the development server:
++> **Security note:** `NEXT_PUBLIC_*` variables are embedded in the browser bundle, so anyone can read the key
++> from the deployed site. Use a free/restricted key. Keys that were ever committed to git should be rotated.
+ 
+-```bash
+-npm run dev
+-# or
+-yarn dev
+-# or
+-pnpm dev
++## Features
++
++- Symbol validation, interval (minute / hour / day) and SMA window (10 / 20 / 50)
++- Summary cards (latest, change, high, low), gradient chart that turns red/green with the trend
++- Loading skeleton, friendly errors (rate limit, bad key, unknown symbol, offline) with retry
++- Recent searches saved locally, accessible data table, keyboard and screen-reader friendly, reduced-motion aware
++- A newer search cancels the previous request, so results never arrive out of order
++
++## Structure
++
++```
++src/
++  app/          page, layout, global styles
++  components/   Hero, SearchForm, StockChart, StatCards, ChartSkeleton, Notice, Background
++  hooks/        useStockSearch (request state), useRecentSymbols
++  lib/          polygon.js (API + error mapping), format.js (formatting + stats)
++  config/       environment configuration
+ ```
++
++## Deploying to GitHub Pages
++
++Add a repository secret `POLYGON_API_KEY`; the workflow in `.github/workflows/nextjs.yml` builds and publishes `./out`.
+diff --git a/REFACTOR_NOTES.md b/REFACTOR_NOTES.md
+new file mode 100644
+index 0000000..5d35bc0
+--- /dev/null
++++ b/REFACTOR_NOTES.md
+@@ -0,0 +1,23 @@
++# Refactor notes
++
++## Logic fixes
++- Chart labels used `getDay()` (a 0–6 weekday number) and the API returned newest-first, so the chart ran backwards. Data is now sorted oldest → newest with real date/time labels.
++- Crash when the API returned no `results.values`; empty/invalid responses now show a clear message.
++- Errors were stored as raw objects and rendered in JSX (React crash). Errors are mapped to readable messages (401/403, 404, 429, timeout, offline).
++- `setInfo({ ...setInfo })` spread a function; symbol was never cleared after errors and the input was uncontrolled. Form is fully controlled and validated (`AAPL`, `BRK.B`).
++- Race condition: slow older requests could overwrite newer ones; now cancelled with `AbortController`.
++- `lineChart` was a lowercase component name, `tension` was a string, leftover `console.log`s and unused `loading.js`, `wiggle` keyframes and icon removed.
++- Tailwind `content` glob was wrong (`"src/**/*{html,js,jsx}"`); fixed. CSS used `@import "tailwindcss/..."`; replaced by `@tailwind` directives.
++- Workflow: `next export` (invalid with `output: "export"`), Node 16 and old actions; updated, adds lint and passes the key from a secret.
++
++## Security
++- `.env` with a real API key was committed and not git-ignored. It is removed from this zip, `.env*` is now ignored, and `.env.example` is provided. **Rotate that key.**
++
++## UI/UX
++- Responsive single-column layout (the old one used `h-[100vh]` and `w-fit`, overflowing on small screens), dark theme, Inter font, labelled form fields, focus rings, loading skeleton, empty state, retry button.
++- Summary stats, gradient chart with tooltips, accessible data table, recent-search chips.
++- Decorative background glow is `aria-hidden`, no longer moves off-screen, and stops for reduced-motion users.
++
++## Notes
++- I could not run `npm install` here (no registry access), so this was not compiled. Run `npm install && npm run lint && npm run build`.
++- `package.json` is untouched so `package-lock.json` stays valid. Optional: move `eslint`, `eslint-config-next`, `postcss`, `autoprefixer`, `tailwindcss` to `devDependencies`.
+diff --git a/next.config.js b/next.config.js
+index bd7fd9e..ddf8cbc 100644
+--- a/next.config.js
++++ b/next.config.js
+@@ -1,5 +1,7 @@
+ /** @type {import('next').NextConfig} */
+ const nextConfig = {
++  reactStrictMode: true,
++  // Static export for GitHub Pages (output goes to ./out on `next build`).
+   output: "export",
+   images: { unoptimized: true },
+ };
+diff --git a/public/images/icons8-submit-progress-50.png b/public/images/icons8-submit-progress-50.png
+deleted file mode 100644
+index 8060691..0000000
+Binary files a/public/images/icons8-submit-progress-50.png and /dev/null differ
+diff --git a/src/app/globals.css b/src/app/globals.css
+index 2ed41a1..af0af55 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -1,133 +1,77 @@
+-@import "tailwindcss/base";
+-@import "tailwindcss/components";
+-@import "tailwindcss/utilities";
++@tailwind base;
++@tailwind components;
++@tailwind utilities;
+ 
+ :root {
+-  background: rgb(12, 12, 12);
+-  background-repeat: no-repeat;
+-  background-size: cover;
+-  min-height: 100vh;
+-  overflow-x: hidden;
++  color-scheme: dark;
+ }
+ 
+-.mainAnimation {
+-  position: fixed;
+-  animation: rotating 8s infinite ease-in-out;
++html,
++body {
++  background: #09090b;
+ }
+ 
+-@keyframes rotating {
+-  0% {
+-    transform: rotate(0deg);
++@layer components {
++  .field {
++    @apply w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-100 transition-colors placeholder:text-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 aria-[invalid=true]:border-red-500;
+   }
+-  50% {
+-    transform: rotate(180deg);
++
++  .btn-primary {
++    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 disabled:cursor-not-allowed disabled:opacity-60;
+   }
+-  100% {
+-    transform: rotate(360deg);
++
++  .chip {
++    @apply rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs font-semibold tracking-wide text-zinc-200 transition-colors hover:border-emerald-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:opacity-50;
+   }
+ }
+ 
+-.circleAnimation {
+-  position: relative;
+-  top: 0;
+-  left: 0;
+-  opacity: 0.5;
+-  border-radius: 100%;
+-  filter: blur(50px);
+-  width: 300px;
+-  height: 300px;
+-  background: linear-gradient(
+-    305deg,
+-    rgb(24, 255, 147) 20%,
+-    rgb(178, 34, 255) 50%,
+-    rgb(29, 149, 255) 100%
+-  );
+-  animation: bgloop 10s infinite ease-in-out;
++@layer utilities {
++  .text-balance {
++    text-wrap: balance;
++  }
+ }
+ 
+-.circleAnimation2 {
++/* Soft drifting colour glows behind the page. */
++.glow {
+   position: absolute;
+-  top: 0;
+-  left: 0;
+-  opacity: 0.5;
+-  border-radius: 100%;
+-  filter: blur(50px);
+-  width: 300px;
+-  height: 300px;
+-  background: linear-gradient(
+-    305deg,
+-    rgb(24, 255, 147) 20%,
+-    rgb(178, 34, 255) 50%,
+-    rgb(29, 149, 255) 100%
+-  );
+-  animation: bgloop2 10s infinite ease-in-out;
++  width: 32rem;
++  height: 32rem;
++  border-radius: 9999px;
++  opacity: 0.25;
++  filter: blur(80px);
++  will-change: transform;
+ }
+-
+-.circleAnimation3 {
+-  position: absolute;
+-  top: 0;
+-  left: 0;
+-  opacity: 0.5;
+-  border-radius: 100%;
+-  filter: blur(50px);
+-  width: 300px;
+-  height: 300px;
+-  background: linear-gradient(
+-    305deg,
+-    rgb(24, 255, 147) 20%,
+-    rgb(178, 34, 255) 50%,
+-    rgb(29, 149, 255) 100%
+-  );
+-  animation: bgloop3 10s infinite ease-in-out;
++.glow-a {
++  top: -10rem;
++  left: -8rem;
++  background: rgb(24, 255, 147);
++  animation: drift-a 18s ease-in-out infinite;
+ }
+-
+-@keyframes bgloop {
+-  0% {
+-    transform: translate3d(800px, 500px, 300px);
+-  }
+-  50% {
+-    transform: translate3d(0px, 0px, 0px);
+-  }
+-  100% {
+-    transform: translate3d(800px, 500px, 300px);
+-  }
++.glow-b {
++  top: 30%;
++  right: -10rem;
++  background: rgb(178, 34, 255);
++  animation: drift-b 22s ease-in-out infinite;
+ }
+-
+-@keyframes bgloop2 {
+-  0% {
+-    transform: translate3d(-900px, -300px, -300px);
+-  }
+-  50% {
+-    transform: translate3d(0px, 0px, 0px);
+-  }
+-  100% {
+-    transform: translate3d(-900px, -300px, -300px);
+-  }
++.glow-c {
++  bottom: -12rem;
++  left: 25%;
++  background: rgb(29, 149, 255);
++  animation: drift-c 20s ease-in-out infinite;
+ }
+ 
+-@keyframes bgloop3 {
+-  0% {
+-    transform: translate3d(400px, 600px, 300px);
+-  }
+-  50% {
+-    transform: translate3d(-800px, -450px, 0px);
+-  }
+-  100% {
+-    transform: translate3d(400px, 600px, 300px);
+-  }
++@keyframes drift-a {
++  50% { transform: translate3d(12vw, 10vh, 0); }
+ }
+-
+-.loader {
+-  display: flex;
+-  justify-content: center;
+-  align-items: center;
+-  height: 100vh;
++@keyframes drift-b {
++  50% { transform: translate3d(-14vw, -8vh, 0); }
++}
++@keyframes drift-c {
++  50% { transform: translate3d(10vw, -12vh, 0); }
+ }
+ 
+-.spinner {
+-  border: 4px solid rgba(0, 0, 0, 0.1);
+-  border-left-color: blue;
+-  border-radius: 50%;
+-  width: 40px;
+-  height: 40px;
++@media (prefers-reduced-motion: reduce) {
++  .glow {
++    animation: none;
++  }
+ }
+diff --git a/src/app/layout.js b/src/app/layout.js
+index 0a650ff..eeb15e8 100644
+--- a/src/app/layout.js
++++ b/src/app/layout.js
+@@ -1,14 +1,21 @@
++import { Inter } from "next/font/google";
+ import "./globals.css";
+ 
++const inter = Inter({ subsets: ["latin"], display: "swap" });
++
+ export const metadata = {
+-  title: "Stock-App",
+-  description: "Generated by create next app",
++  title: "Stock Trends",
++  description:
++    "Search a stock symbol and chart its simple moving average with Polygon.io data.",
++  themeColor: "#09090b",
+ };
+ 
+ export default function RootLayout({ children }) {
+   return (
+     <html lang="en">
+-      <body>{children}</body>
++      <body className={`${inter.className} bg-zinc-950 text-zinc-100 antialiased`}>
++        {children}
++      </body>
+     </html>
+   );
+ }
+diff --git a/src/app/page.js b/src/app/page.js
+index cc99282..abea24b 100644
+--- a/src/app/page.js
++++ b/src/app/page.js
+@@ -1,46 +1,70 @@
+ "use client";
+ 
+-import React, { useState } from "react";
+-import Welcome from "@/components/welcome";
+-import SearchStock from "@/components/searchStock";
+-import LineChart from "@/components/lineChart";
++import { useEffect } from "react";
++import Background from "@/components/Background";
++import ChartSkeleton from "@/components/ChartSkeleton";
++import Hero from "@/components/Hero";
++import Notice from "@/components/Notice";
++import SearchForm from "@/components/SearchForm";
++import StockChart from "@/components/StockChart";
++import { useRecentSymbols } from "@/hooks/useRecentSymbols";
++import { useStockSearch } from "@/hooks/useStockSearch";
+ 
+ export default function Home() {
+-  const [data, setData] = useState(null);
+-  const [loading, setLoading] = useState(false);
+-  const [info, setInfo] = useState({
+-    symbol: "",
+-    timespan: "",
+-  });
+-  const [nameStock, setNameStock] = useState("");
++  const { status, query, points, error, search } = useStockSearch();
++  const { recent, remember, clear } = useRecentSymbols();
+ 
+-  console.log(data);
++  const isLoading = status === "loading";
+ 
++  useEffect(() => {
++    if (status === "success" && query) remember(query.symbol);
++  }, [status, query, remember]);
+ 
+   return (
+-    <main className="py-16 lg:flex h-[100vh] gap-10 justify-center items-center w-fit mx-auto">
+-      <div className="h-full grid gap-5 lg:gap-0 justify-center items-center w-1/2 lg:w-full">
+-        <Welcome />
+-        <div className="block lg:hidden">
+-          {data && (
+-            <LineChart name={info.symbol} loading={loading} data={data} />
+-          )}
+-        </div>
+-        <SearchStock
+-          loading={loading}
+-          setLoading={setLoading}
+-          info={info}
+-          setInfo={setInfo}
+-          data={data}
+-          setNameStock={setNameStock}
+-          setData={setData}
++    <>
++      <Background />
++      <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-8 px-4 py-12 sm:py-16">
++        <Hero />
++        <SearchForm
++          onSearch={search}
++          isLoading={isLoading}
++          recent={recent}
++          onClearRecent={clear}
+         />
+-      </div>
+-       {data && (
+-        <div className="hidden lg:block w-1/2 lg:w-full">
+-          <LineChart name={info.symbol} loading={loading} data={data} />
++
++        <div aria-live="polite">
++          {isLoading && points.length === 0 && <ChartSkeleton />}
++
++          {points.length > 0 && query && (
++            <StockChart points={points} query={query} isRefreshing={isLoading} />
++          )}
++
++          {status === "error" && (
++            <Notice
++              tone="error"
++              title="Couldn’t load data"
++              action={
++                <button
++                  type="button"
++                  onClick={() => search(query)}
++                  className="btn-primary mt-3"
++                >
++                  Try again
++                </button>
++              }
++            >
++              {error}
++            </Notice>
++          )}
++
++          {status === "idle" && (
++            <Notice title="Search for a stock">
++              Enter a ticker such as AAPL, MSFT or TSLA to see how its moving
++              average has trended.
++            </Notice>
++          )}
+         </div>
+-      )} 
+-    </main>
++      </main>
++    </>
+   );
+ }
+diff --git a/src/components/Background.js b/src/components/Background.js
+new file mode 100644
+index 0000000..6e15cb6
+--- /dev/null
++++ b/src/components/Background.js
+@@ -0,0 +1,13 @@
++/** Decorative animated glow. Purely visual, so hidden from assistive tech. */
++export default function Background() {
++  return (
++    <div
++      aria-hidden="true"
++      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
++    >
++      <div className="glow glow-a" />
++      <div className="glow glow-b" />
++      <div className="glow glow-c" />
++    </div>
++  );
++}
+diff --git a/src/components/ChartSkeleton.js b/src/components/ChartSkeleton.js
+new file mode 100644
+index 0000000..a054f17
+--- /dev/null
++++ b/src/components/ChartSkeleton.js
+@@ -0,0 +1,14 @@
++export default function ChartSkeleton() {
++  return (
++    <div role="status" className="animate-pulse space-y-4">
++      <div className="h-8 w-32 rounded-md bg-zinc-800" />
++      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
++        {[0, 1, 2, 3].map((item) => (
++          <div key={item} className="h-[74px] rounded-xl bg-zinc-800/70" />
++        ))}
++      </div>
++      <div className="h-72 rounded-2xl bg-zinc-800/70 sm:h-96" />
++      <span className="sr-only">Loading chart…</span>
++    </div>
++  );
++}
+diff --git a/src/components/Hero.js b/src/components/Hero.js
+new file mode 100644
+index 0000000..ca60d18
+--- /dev/null
++++ b/src/components/Hero.js
+@@ -0,0 +1,12 @@
++export default function Hero() {
++  return (
++    <header className="space-y-3 text-center">
++      <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
++        Stock <span className="text-emerald-400">Trends</span>
++      </h1>
++      <p className="mx-auto max-w-xl text-balance text-zinc-400">
++        Look up a ticker and see its simple moving average (SMA) over time.
++      </p>
++    </header>
++  );
++}
+diff --git a/src/components/Notice.js b/src/components/Notice.js
+new file mode 100644
+index 0000000..1b87156
+--- /dev/null
++++ b/src/components/Notice.js
+@@ -0,0 +1,17 @@
++/** Message panel used for the empty and error states. */
++export default function Notice({ title, children, tone = "neutral", action }) {
++  const styles =
++    tone === "error"
++      ? "border-red-500/30 bg-red-500/10"
++      : "border-zinc-800 bg-zinc-900/50";
++  return (
++    <div
++      role={tone === "error" ? "alert" : undefined}
++      className={`space-y-2 rounded-2xl border p-8 text-center ${styles}`}
++    >
++      <h2 className="text-lg font-semibold text-white">{title}</h2>
++      <p className="mx-auto max-w-md text-sm text-zinc-400">{children}</p>
++      {action}
++    </div>
++  );
++}
+diff --git a/src/components/SearchForm.js b/src/components/SearchForm.js
+new file mode 100644
+index 0000000..680e627
+--- /dev/null
++++ b/src/components/SearchForm.js
+@@ -0,0 +1,152 @@
++"use client";
++
++import { useId, useState } from "react";
++import {
++  DEFAULT_QUERY,
++  normalizeSymbol,
++  TIMESPANS,
++  validateSymbol,
++  WINDOWS,
++} from "@/lib/polygon";
++
++export default function SearchForm({ onSearch, isLoading, recent, onClearRecent }) {
++  const id = useId();
++  const [symbol, setSymbol] = useState(DEFAULT_QUERY.symbol);
++  const [timespan, setTimespan] = useState(DEFAULT_QUERY.timespan);
++  const [smaWindow, setSmaWindow] = useState(DEFAULT_QUERY.window);
++  const [error, setError] = useState("");
++
++  function submit(rawSymbol) {
++    const normalized = normalizeSymbol(rawSymbol);
++    const message = validateSymbol(normalized);
++    setError(message);
++    if (message) return;
++    setSymbol(normalized);
++    onSearch({ symbol: normalized, timespan, window: smaWindow });
++  }
++
++  return (
++    <section
++      aria-label="Search"
++      className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5 backdrop-blur"
++    >
++      <form
++        noValidate
++        onSubmit={(event) => {
++          event.preventDefault();
++          submit(symbol);
++        }}
++        className="grid gap-4 sm:grid-cols-[1fr_auto_auto_auto] sm:items-start"
++      >
++        <div className="space-y-1.5">
++          <label htmlFor={`${id}-symbol`} className="text-sm font-medium text-zinc-300">
++            Symbol
++          </label>
++          <input
++            id={`${id}-symbol`}
++            type="text"
++            value={symbol}
++            onChange={(event) => {
++              setSymbol(event.target.value.toUpperCase());
++              if (error) setError("");
++            }}
++            placeholder="AAPL"
++            maxLength={8}
++            autoComplete="off"
++            autoCapitalize="characters"
++            spellCheck={false}
++            aria-invalid={Boolean(error)}
++            aria-describedby={error ? `${id}-error` : undefined}
++            className="field font-semibold tracking-wider"
++          />
++        </div>
++
++        <div className="space-y-1.5">
++          <label htmlFor={`${id}-timespan`} className="text-sm font-medium text-zinc-300">
++            Interval
++          </label>
++          <select
++            id={`${id}-timespan`}
++            value={timespan}
++            onChange={(event) => setTimespan(event.target.value)}
++            className="field"
++          >
++            {TIMESPANS.map((item) => (
++              <option key={item.value} value={item.value}>
++                {item.label}
++              </option>
++            ))}
++          </select>
++        </div>
++
++        <div className="space-y-1.5">
++          <label htmlFor={`${id}-window`} className="text-sm font-medium text-zinc-300">
++            SMA window
++          </label>
++          <select
++            id={`${id}-window`}
++            value={smaWindow}
++            onChange={(event) => setSmaWindow(Number(event.target.value))}
++            className="field"
++          >
++            {WINDOWS.map((value) => (
++              <option key={value} value={value}>
++                {value} periods
++              </option>
++            ))}
++          </select>
++        </div>
++
++        <button
++          type="submit"
++          disabled={isLoading}
++          className="btn-primary sm:mt-[1.625rem]"
++        >
++          {isLoading ? (
++            <>
++              <span
++                aria-hidden="true"
++                className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
++              />
++              Searching…
++            </>
++          ) : (
++            "Search"
++          )}
++        </button>
++      </form>
++
++      {error && (
++        <p id={`${id}-error`} role="alert" className="text-sm text-red-400">
++          {error}
++        </p>
++      )}
++
++      {recent.length > 0 && (
++        <div className="flex flex-wrap items-center gap-2 border-t border-zinc-800 pt-4">
++          <span className="text-xs uppercase tracking-wide text-zinc-500">
++            Recent
++          </span>
++          {recent.map((item) => (
++            <button
++              key={item}
++              type="button"
++              disabled={isLoading}
++              onClick={() => submit(item)}
++              className="chip"
++            >
++              {item}
++            </button>
++          ))}
++          <button
++            type="button"
++            onClick={onClearRecent}
++            className="ml-auto text-xs text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
++          >
++            Clear
++          </button>
++        </div>
++      )}
++    </section>
++  );
++}
+diff --git a/src/components/StatCards.js b/src/components/StatCards.js
+new file mode 100644
+index 0000000..82f996c
+--- /dev/null
++++ b/src/components/StatCards.js
+@@ -0,0 +1,28 @@
++import { formatPercent, formatPrice } from "@/lib/format";
++
++function Stat({ label, value, tone = "text-white" }) {
++  return (
++    <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4">
++      <dt className="text-xs uppercase tracking-wide text-zinc-500">{label}</dt>
++      <dd className={`mt-1 text-lg font-semibold tabular-nums ${tone}`}>{value}</dd>
++    </div>
++  );
++}
++
++export default function StatCards({ summary }) {
++  const isUp = summary.change >= 0;
++  return (
++    <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
++      <Stat label="Latest SMA" value={formatPrice(summary.latest)} />
++      <Stat
++        label="Change"
++        value={`${isUp ? "+" : "−"}${formatPrice(Math.abs(summary.change))} (${formatPercent(
++          summary.changePercent
++        )})`}
++        tone={isUp ? "text-emerald-400" : "text-red-400"}
++      />
++      <Stat label="High" value={formatPrice(summary.high)} />
++      <Stat label="Low" value={formatPrice(summary.low)} />
++    </dl>
++  );
++}
+diff --git a/src/components/StockChart.js b/src/components/StockChart.js
+new file mode 100644
+index 0000000..31438fd
+--- /dev/null
++++ b/src/components/StockChart.js
+@@ -0,0 +1,154 @@
++"use client";
++
++import { useMemo } from "react";
++import {
++  CategoryScale,
++  Chart as ChartJS,
++  Filler,
++  LinearScale,
++  LineElement,
++  PointElement,
++  Tooltip,
++} from "chart.js";
++import { Line } from "react-chartjs-2";
++import {
++  formatAxisLabel,
++  formatFullDate,
++  formatPrice,
++  summarize,
++} from "@/lib/format";
++import StatCards from "./StatCards";
++
++ChartJS.register(
++  CategoryScale,
++  LinearScale,
++  PointElement,
++  LineElement,
++  Tooltip,
++  Filler
++);
++
++const UP = { line: "rgb(52, 211, 153)", fill: "52, 211, 153" };
++const DOWN = { line: "rgb(248, 113, 113)", fill: "248, 113, 113" };
++
++export default function StockChart({ points, query, isRefreshing }) {
++  const summary = useMemo(() => summarize(points), [points]);
++  const palette = summary.change >= 0 ? UP : DOWN;
++
++  const prefersReducedMotion =
++    typeof window !== "undefined" &&
++    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
++
++  const data = useMemo(
++    () => ({
++      labels: points.map((p) => formatAxisLabel(p.timestamp, query.timespan)),
++      datasets: [
++        {
++          fill: true,
++          label: `SMA(${query.window})`,
++          data: points.map((p) => p.value),
++          borderColor: palette.line,
++          borderWidth: 2,
++          tension: 0.35,
++          pointRadius: 0,
++          pointHoverRadius: 5,
++          pointHoverBackgroundColor: palette.line,
++          backgroundColor: (context) => {
++            const { ctx, chartArea } = context.chart;
++            if (!chartArea) return `rgba(${palette.fill}, 0.2)`;
++            const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
++            gradient.addColorStop(0, `rgba(${palette.fill}, 0.35)`);
++            gradient.addColorStop(1, `rgba(${palette.fill}, 0)`);
++            return gradient;
++          },
++        },
++      ],
++    }),
++    [points, query.timespan, query.window, palette]
++  );
++
++  const options = useMemo(
++    () => ({
++      responsive: true,
++      maintainAspectRatio: false,
++      animation: prefersReducedMotion ? false : { duration: 500 },
++      interaction: { mode: "index", intersect: false },
++      plugins: {
++        legend: { display: false },
++        tooltip: {
++          displayColors: false,
++          callbacks: {
++            title: (items) => formatFullDate(points[items[0].dataIndex].timestamp),
++            label: (item) => `${item.dataset.label}: ${formatPrice(item.parsed.y)}`,
++          },
++        },
++      },
++      scales: {
++        x: {
++          grid: { display: false },
++          ticks: { color: "#a1a1aa", maxTicksLimit: 6, maxRotation: 0 },
++        },
++        y: {
++          grid: { color: "rgba(255,255,255,0.06)" },
++          ticks: { color: "#a1a1aa", callback: (value) => formatPrice(value) },
++        },
++      },
++    }),
++    [points, prefersReducedMotion]
++  );
++
++  const description = `Line chart of ${query.symbol} simple moving average over ${points.length} ${query.timespan} intervals, from ${formatPrice(
++    points[0].value
++  )} to ${formatPrice(summary.latest)}.`;
++
++  return (
++    <section
++      aria-label={`${query.symbol} chart`}
++      className={`space-y-4 transition-opacity ${isRefreshing ? "opacity-60" : ""}`}
++    >
++      <div className="flex flex-wrap items-baseline justify-between gap-2">
++        <h2 className="text-2xl font-semibold text-white">{query.symbol}</h2>
++        <p className="text-sm text-zinc-400">
++          SMA({query.window}) · {query.timespan} bars
++        </p>
++      </div>
++
++      <StatCards summary={summary} />
++
++      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
++        <div className="h-72 sm:h-96">
++          <Line
++            data={data}
++            options={options}
++            role="img"
++            aria-label={description}
++          />
++        </div>
++      </div>
++
++      <details className="rounded-xl border border-zinc-800 bg-zinc-900/70 text-sm">
++        <summary className="cursor-pointer select-none px-4 py-3 text-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
++          View data table
++        </summary>
++        <div className="max-h-64 overflow-auto px-4 pb-4">
++          <table className="w-full text-left">
++            <thead className="text-xs uppercase text-zinc-500">
++              <tr>
++                <th scope="col" className="py-2 pr-4">Time</th>
++                <th scope="col" className="py-2 text-right">SMA</th>
++              </tr>
++            </thead>
++            <tbody className="tabular-nums text-zinc-300">
++              {[...points].reverse().map((p) => (
++                <tr key={p.timestamp} className="border-t border-zinc-800">
++                  <td className="py-1.5 pr-4">{formatFullDate(p.timestamp)}</td>
++                  <td className="py-1.5 text-right">{formatPrice(p.value)}</td>
++                </tr>
++              ))}
++            </tbody>
++          </table>
++        </div>
++      </details>
++    </section>
++  );
++}
+diff --git a/src/components/lineChart.js b/src/components/lineChart.js
+deleted file mode 100644
+index 6c06727..0000000
+--- a/src/components/lineChart.js
++++ /dev/null
+@@ -1,75 +0,0 @@
+-"use client";
+-
+-import {
+-  Chart as ChartJS,
+-  CategoryScale,
+-  LinearScale,
+-  PointElement,
+-  LineElement,
+-  Title,
+-  Tooltip,
+-  Filler,
+-  Legend,
+-} from "chart.js";
+-import { useEffect } from "react";
+-import { Line } from "react-chartjs-2";
+-
+-ChartJS.register(
+-  CategoryScale,
+-  LinearScale,
+-  PointElement,
+-  LineElement,
+-  Title,
+-  Tooltip,
+-  Filler,
+-  Legend
+-);
+-
+-export default function lineChart({ data, loading, name }) {
+-  const result = data?.results || [];
+-
+-  let price = [];
+-  let timeSeries = [];
+-
+-  result?.values.length > 0 &&
+-    result?.values?.map((item) => {
+-      price.push(item.value);
+-      timeSeries.push(new Date(item.timestamp).getDay());
+-    });
+-
+-  const options = {
+-    responsive: true,
+-    plugins: {
+-      legend: {
+-        position: "top",
+-      },
+-      title: {
+-        display: false,
+-        text: "Chart.js Line Chart",
+-      },
+-    },
+-  };
+-
+-  const labels = timeSeries;
+-
+-  const dataChart = {
+-    labels,
+-    datasets: [
+-      {
+-        fill: true,
+-        label: "stock",
+-        tension: "0.4",
+-        data: price,
+-        borderColor: "rgb(100, 200, 10)",
+-        backgroundColor: "rgba(100, 200, 10, 0.5)",
+-      },
+-    ],
+-  };
+-
+-  return (
+-    <div className="max-w-[800px] w-full my-6 text-center p-5 mx-auto">
+-      <h2 className="text-3xl text-white font-semibold">Symbol : {name}</h2>
+-      <Line options={options} data={dataChart} />
+-    </div>
+-  );
+-}
+diff --git a/src/components/loading.js b/src/components/loading.js
+deleted file mode 100644
+index fac4611..0000000
+--- a/src/components/loading.js
++++ /dev/null
+@@ -1,8 +0,0 @@
+-const LoadingPage = () => {
+-    return (
+-      <div className='loader'>
+-        <div className='spinner animate-spin'></div>
+-      </div>
+-    );
+-  };
+-  export default LoadingPage;
+\ No newline at end of file
+diff --git a/src/components/searchStock.js b/src/components/searchStock.js
+deleted file mode 100644
+index 5c0630f..0000000
+--- a/src/components/searchStock.js
++++ /dev/null
+@@ -1,71 +0,0 @@
+-"use client";
+-
+-import { keyApi, baseUrl } from "@/config";
+-import axios from "axios";
+-import { useState } from "react";
+-
+-export default function SearchStock({ setInfo, loading, setData, setLoading }) {
+-  const [symbol, setSymbol] = useState("");
+-  const [timespan, setTimespan] = useState("minute");
+-  const [error, setError] = useState("");
+-  const loadingButton = "bg-blue-400/60 rounded-full p-5 animate-pulse ";
+-  const button =
+-    "bg-zinc-700 z-50 rounded-full text-white w-16 h-16 text-zinc-300";
+-
+-
+-  const handleSubmit = async (e, symbol, timespan) => {
+-    e.preventDefault();
+-    setLoading(true);
+-    const apiUrl = `${baseUrl}/${symbol}?timespan=${timespan}&adjusted=true&window=50&series_type=close&order=desc&limit=10&apiKey=${keyApi}`
+-    try {
+-      const res = await axios.get(apiUrl);
+-      setData(res.data);
+-    } catch (error) {
+-      console.log(error);
+-      setError(error);
+-    }
+-    setInfo({ ...setInfo, symbol: symbol });
+-    setLoading(false);
+-  };
+-  console.log(timespan);
+-  return (
+-    <>
+-      <form
+-        onSubmit={(e) => {
+-          if (symbol && timespan) {
+-            handleSubmit(e, symbol, timespan);
+-            setError("");
+-          } else {
+-            e.preventDefault();
+-            setError("Symbol or time is empty");
+-          }
+-        }}
+-        className="w-fit flex justify-center items-center gap-5 mx-auto">
+-        <div className="flex">
+-          <input
+-            type="text"
+-            className="rounded-s-3xl mx-auto p-2 w-32 h-16 outline-none bg-zinc-700 text-white text-center placeholder:text-center z-50"
+-            onChange={(e) => {
+-              const uppercase_Symbol = e.target.value.toUpperCase();
+-              setSymbol(uppercase_Symbol);
+-            }}
+-            placeholder="symbol"
+-          />
+-          <select
+-            className="bg-zinc-700 w-42 h-16 text-white p-3 rounded-e-3xl z-50 outline-none"
+-            onChange={(e) => setTimespan(e.target.value)}>
+-            <option value="minute">miu</option>
+-            <option value="hour">hour</option>
+-            <option value="day">day</option>
+-          </select>
+-        </div>
+-        <button className={loading ? loadingButton : button} type="submit">
+-          {!loading && "Sub"}
+-        </button>
+-      </form>
+-      <h2 className="text-red-500 font-bold absolute bottom-10 left-1/2 -translate-x-1/2">
+-        {error}
+-      </h2>
+-    </>
+-  );
+-}
+diff --git a/src/components/welcome.js b/src/components/welcome.js
+deleted file mode 100644
+index 5612c56..0000000
+--- a/src/components/welcome.js
++++ /dev/null
+@@ -1,14 +0,0 @@
+-export default function welcome() {
+-  return (
+-    <div className="text-2xl md:text-3xl lg:text-5xl text-zinc-400  text-center">
+-      <h1 className="font-semibold">
+-        Welcome to <span className="text-white">Stock</span> App
+-      </h1>
+-      <div className="mainAnimation">
+-        <div className="circleAnimation"></div>
+-        <div className="circleAnimation2"></div>
+-        <div className="circleAnimation3"></div>
+-      </div>
+-    </div>
+-  );
+-}
+diff --git a/src/config/index.js b/src/config/index.js
+index 6b0b3b3..53e78cf 100644
+--- a/src/config/index.js
++++ b/src/config/index.js
+@@ -1,2 +1,4 @@
+-export const keyApi = process.env.NEXT_PUBLIC_APP_API_KEY;
+-export const baseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL;
++export const keyApi = process.env.NEXT_PUBLIC_APP_API_KEY || "";
++export const baseUrl =
++  process.env.NEXT_PUBLIC_APP_BASE_URL ||
++  "https://api.polygon.io/v1/indicators/sma";
+diff --git a/src/hooks/useRecentSymbols.js b/src/hooks/useRecentSymbols.js
+new file mode 100644
+index 0000000..5f281d2
+--- /dev/null
++++ b/src/hooks/useRecentSymbols.js
+@@ -0,0 +1,48 @@
++"use client";
++
++import { useCallback, useEffect, useState } from "react";
++
++const STORAGE_KEY = "stock-app:recent-symbols";
++const MAX_RECENT = 6;
++
++export function useRecentSymbols() {
++  const [recent, setRecent] = useState([]);
++
++  // Read after mount so server and client markup match.
++  useEffect(() => {
++    try {
++      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
++      if (Array.isArray(saved)) {
++        setRecent(saved.filter((s) => typeof s === "string").slice(0, MAX_RECENT));
++      }
++    } catch {
++      // Ignore corrupted or unavailable storage.
++    }
++  }, []);
++
++  const remember = useCallback((symbol) => {
++    setRecent((current) => {
++      const next = [symbol, ...current.filter((s) => s !== symbol)].slice(
++        0,
++        MAX_RECENT
++      );
++      try {
++        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
++      } catch {
++        // Storage may be full or disabled; keep the in-memory list.
++      }
++      return next;
++    });
++  }, []);
++
++  const clear = useCallback(() => {
++    setRecent([]);
++    try {
++      localStorage.removeItem(STORAGE_KEY);
++    } catch {
++      // Nothing to do.
++    }
++  }, []);
++
++  return { recent, remember, clear };
++}
+diff --git a/src/hooks/useStockSearch.js b/src/hooks/useStockSearch.js
+new file mode 100644
+index 0000000..996725b
+--- /dev/null
++++ b/src/hooks/useStockSearch.js
+@@ -0,0 +1,51 @@
++"use client";
++
++import { useCallback, useEffect, useReducer, useRef } from "react";
++import { fetchSma, StockApiError } from "@/lib/polygon";
++
++const initialState = { status: "idle", query: null, points: [], error: "" };
++
++function reducer(state, action) {
++  switch (action.type) {
++    case "start":
++      // Keep the previous points so the chart does not flash empty.
++      return { ...state, status: "loading", query: action.query, error: "" };
++    case "success":
++      return { ...state, status: "success", points: action.points };
++    case "error":
++      return { ...state, status: "error", points: [], error: action.error };
++    default:
++      return state;
++  }
++}
++
++/** Loads SMA data; a newer search always cancels the one still running. */
++export function useStockSearch() {
++  const [state, dispatch] = useReducer(reducer, initialState);
++  const controllerRef = useRef(null);
++
++  const search = useCallback(async (query) => {
++    controllerRef.current?.abort();
++    const controller = new AbortController();
++    controllerRef.current = controller;
++
++    dispatch({ type: "start", query });
++    try {
++      const points = await fetchSma(query, controller.signal);
++      if (!controller.signal.aborted) dispatch({ type: "success", points });
++    } catch (error) {
++      if (controller.signal.aborted) return;
++      dispatch({
++        type: "error",
++        error:
++          error instanceof StockApiError
++            ? error.message
++            : "Something went wrong. Please try again.",
++      });
++    }
++  }, []);
++
++  useEffect(() => () => controllerRef.current?.abort(), []);
++
++  return { ...state, search };
++}
+diff --git a/src/lib/format.js b/src/lib/format.js
+new file mode 100644
+index 0000000..8f84e70
+--- /dev/null
++++ b/src/lib/format.js
+@@ -0,0 +1,47 @@
++const currency = new Intl.NumberFormat("en-US", {
++  style: "currency",
++  currency: "USD",
++});
++
++export const formatPrice = (value) => currency.format(value);
++
++export function formatPercent(value) {
++  const sign = value > 0 ? "+" : "";
++  return `${sign}${value.toFixed(2)}%`;
++}
++
++/** Short axis label that suits the chosen timespan. */
++export function formatAxisLabel(timestamp, timespan) {
++  const date = new Date(timestamp);
++  if (timespan === "day") {
++    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
++  }
++  return date.toLocaleString("en-US", {
++    month: "short",
++    day: "numeric",
++    hour: "numeric",
++    minute: timespan === "minute" ? "2-digit" : undefined,
++  });
++}
++
++export function formatFullDate(timestamp) {
++  return new Date(timestamp).toLocaleString("en-US", {
++    dateStyle: "medium",
++    timeStyle: "short",
++  });
++}
++
++/** Summary numbers for a list of oldest → newest points. */
++export function summarize(points) {
++  const values = points.map((p) => p.value);
++  const first = values[0];
++  const latest = values[values.length - 1];
++  const change = latest - first;
++  return {
++    latest,
++    change,
++    changePercent: first === 0 ? 0 : (change / first) * 100,
++    high: Math.max(...values),
++    low: Math.min(...values),
++  };
++}
+diff --git a/src/lib/polygon.js b/src/lib/polygon.js
+new file mode 100644
+index 0000000..97ef883
+--- /dev/null
++++ b/src/lib/polygon.js
+@@ -0,0 +1,110 @@
++import axios from "axios";
++import { baseUrl, keyApi } from "@/config";
++
++export const TIMESPANS = [
++  { value: "minute", label: "Minute" },
++  { value: "hour", label: "Hour" },
++  { value: "day", label: "Day" },
++];
++
++export const WINDOWS = [10, 20, 50];
++
++export const DEFAULT_QUERY = { symbol: "", timespan: "day", window: 20 };
++
++const POINTS_LIMIT = 30;
++const SYMBOL_PATTERN = /^[A-Z]{1,5}([.-][A-Z]{1,2})?$/;
++
++export class StockApiError extends Error {
++  constructor(message, code) {
++    super(message);
++    this.name = "StockApiError";
++    this.code = code;
++  }
++}
++
++export function normalizeSymbol(raw) {
++  return String(raw ?? "").trim().toUpperCase();
++}
++
++/** Returns an error message, or an empty string when the symbol looks valid. */
++export function validateSymbol(symbol) {
++  if (!symbol) return "Enter a stock symbol, for example AAPL.";
++  if (!SYMBOL_PATTERN.test(symbol)) {
++    return "Use 1–5 letters, like AAPL or BRK.B.";
++  }
++  return "";
++}
++
++function describeError(error) {
++  if (error.code === "ECONNABORTED") {
++    return "The request timed out. Please try again.";
++  }
++  if (!error.response) {
++    return "Could not reach the data provider. Check your connection and try again.";
++  }
++  switch (error.response.status) {
++    case 401:
++    case 403:
++      return "The API key was rejected, or your plan does not include this data.";
++    case 404:
++      return "That symbol was not found.";
++    case 429:
++      return "Too many requests. The free plan allows about 5 per minute, so wait a moment and retry.";
++    default:
++      return "The data provider returned an error. Please try again later.";
++  }
++}
++
++/**
++ * Fetches the simple moving average for a symbol.
++ * Resolves to points sorted oldest → newest: [{ timestamp, value }].
++ */
++export async function fetchSma({ symbol, timespan, window }, signal) {
++  if (!keyApi) {
++    throw new StockApiError(
++      "The app has no API key configured. Add NEXT_PUBLIC_APP_API_KEY to .env.local.",
++      "config"
++    );
++  }
++
++  try {
++    const response = await axios.get(
++      `${baseUrl}/${encodeURIComponent(symbol)}`,
++      {
++        params: {
++          timespan,
++          adjusted: true,
++          window,
++          series_type: "close",
++          order: "desc",
++          limit: POINTS_LIMIT,
++          apiKey: keyApi,
++        },
++        signal,
++        timeout: 15000,
++      }
++    );
++
++    const values = response.data?.results?.values;
++    const points = Array.isArray(values)
++      ? values
++          .filter(
++            (item) =>
++              Number.isFinite(item?.timestamp) && Number.isFinite(item?.value)
++          )
++          .map(({ timestamp, value }) => ({ timestamp, value }))
++          .sort((a, b) => a.timestamp - b.timestamp)
++      : [];
++
++    if (points.length === 0) {
++      throw new StockApiError(
++        `No data found for ${symbol}. Check the symbol or try another timespan.`,
++        "empty"
++      );
++    }
++    return points;
++  } catch (error) {
++    if (error instanceof StockApiError || axios.isCancel(error)) throw error;
++    throw new StockApiError(describeError(error), "network");
++  }
++}
+diff --git a/tailwind.config.js b/tailwind.config.js
+index b2fd0b9..185e0b1 100644
+--- a/tailwind.config.js
++++ b/tailwind.config.js
+@@ -1,22 +1,8 @@
+ /** @type {import('tailwindcss').Config} */
+ module.exports = {
+-  content: [
+-    "src/**/*{html,js,jsx}"
+-  ],
++  content: ["./src/**/*.{js,jsx,ts,tsx,mdx}"],
+   theme: {
+-    extend: {
+-      backgroundImage: {
+-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+-        'gradient-conic':
+-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+-      },
+-      keyframes: {
+-        wiggle: {
+-          '0%, 100%': { backgroundColor: 'red' },
+-          '50%': { backgroundColor: 'blue' },
+-        }
+-      }
+-    },
++    extend: {},
+   },
+   plugins: [],
+-}
++};

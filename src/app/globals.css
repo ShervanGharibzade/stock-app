@@ -1,133 +1,77 @@
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  background: rgb(12, 12, 12);
-  background-repeat: no-repeat;
-  background-size: cover;
-  min-height: 100vh;
-  overflow-x: hidden;
+  color-scheme: dark;
 }
 
-.mainAnimation {
-  position: fixed;
-  animation: rotating 8s infinite ease-in-out;
+html,
+body {
+  background: #09090b;
 }
 
-@keyframes rotating {
-  0% {
-    transform: rotate(0deg);
+@layer components {
+  .field {
+    @apply w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-100 transition-colors placeholder:text-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 aria-[invalid=true]:border-red-500;
   }
-  50% {
-    transform: rotate(180deg);
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 disabled:cursor-not-allowed disabled:opacity-60;
   }
-  100% {
-    transform: rotate(360deg);
+
+  .chip {
+    @apply rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs font-semibold tracking-wide text-zinc-200 transition-colors hover:border-emerald-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:opacity-50;
   }
 }
 
-.circleAnimation {
-  position: relative;
-  top: 0;
-  left: 0;
-  opacity: 0.5;
-  border-radius: 100%;
-  filter: blur(50px);
-  width: 300px;
-  height: 300px;
-  background: linear-gradient(
-    305deg,
-    rgb(24, 255, 147) 20%,
-    rgb(178, 34, 255) 50%,
-    rgb(29, 149, 255) 100%
-  );
-  animation: bgloop 10s infinite ease-in-out;
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 
-.circleAnimation2 {
+/* Soft drifting colour glows behind the page. */
+.glow {
   position: absolute;
-  top: 0;
-  left: 0;
-  opacity: 0.5;
-  border-radius: 100%;
-  filter: blur(50px);
-  width: 300px;
-  height: 300px;
-  background: linear-gradient(
-    305deg,
-    rgb(24, 255, 147) 20%,
-    rgb(178, 34, 255) 50%,
-    rgb(29, 149, 255) 100%
-  );
-  animation: bgloop2 10s infinite ease-in-out;
+  width: 32rem;
+  height: 32rem;
+  border-radius: 9999px;
+  opacity: 0.25;
+  filter: blur(80px);
+  will-change: transform;
+}
+.glow-a {
+  top: -10rem;
+  left: -8rem;
+  background: rgb(24, 255, 147);
+  animation: drift-a 18s ease-in-out infinite;
+}
+.glow-b {
+  top: 30%;
+  right: -10rem;
+  background: rgb(178, 34, 255);
+  animation: drift-b 22s ease-in-out infinite;
+}
+.glow-c {
+  bottom: -12rem;
+  left: 25%;
+  background: rgb(29, 149, 255);
+  animation: drift-c 20s ease-in-out infinite;
 }
 
-.circleAnimation3 {
-  position: absolute;
-  top: 0;
-  left: 0;
-  opacity: 0.5;
-  border-radius: 100%;
-  filter: blur(50px);
-  width: 300px;
-  height: 300px;
-  background: linear-gradient(
-    305deg,
-    rgb(24, 255, 147) 20%,
-    rgb(178, 34, 255) 50%,
-    rgb(29, 149, 255) 100%
-  );
-  animation: bgloop3 10s infinite ease-in-out;
+@keyframes drift-a {
+  50% { transform: translate3d(12vw, 10vh, 0); }
+}
+@keyframes drift-b {
+  50% { transform: translate3d(-14vw, -8vh, 0); }
+}
+@keyframes drift-c {
+  50% { transform: translate3d(10vw, -12vh, 0); }
 }
 
-@keyframes bgloop {
-  0% {
-    transform: translate3d(800px, 500px, 300px);
+@media (prefers-reduced-motion: reduce) {
+  .glow {
+    animation: none;
   }
-  50% {
-    transform: translate3d(0px, 0px, 0px);
-  }
-  100% {
-    transform: translate3d(800px, 500px, 300px);
-  }
-}
-
-@keyframes bgloop2 {
-  0% {
-    transform: translate3d(-900px, -300px, -300px);
-  }
-  50% {
-    transform: translate3d(0px, 0px, 0px);
-  }
-  100% {
-    transform: translate3d(-900px, -300px, -300px);
-  }
-}
-
-@keyframes bgloop3 {
-  0% {
-    transform: translate3d(400px, 600px, 300px);
-  }
-  50% {
-    transform: translate3d(-800px, -450px, 0px);
-  }
-  100% {
-    transform: translate3d(400px, 600px, 300px);
-  }
-}
-
-.loader {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-left-color: blue;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
 }
